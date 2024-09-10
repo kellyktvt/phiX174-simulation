@@ -119,7 +119,7 @@ def run_pt(sim, gen, ID, pA, pB, pD, tJ, tF, tG, tH, base_dir, date):
     #model.seed(seed)
 
     # Run simulation
-    model.simulate(time_limit=500, time_step=5,output=base_dir + "output/" + str(date) + "/sim_" + str(sim) + "_gen_" + str(gen) + "_ID_" + str(ID) + ".tsv")
+    model.simulate(time_limit=500, time_step=5,output=base_dir + "src/python/main/" + str(date) + "/output/sim_" + str(sim) + "_gen_" + str(gen) + "_ID_" + str(ID) + ".tsv")
 
     
 def run_parallel(sim, gen, pA, pB, pD, tJ, tF, tG, tH, base_dir, date, trials):
@@ -138,12 +138,12 @@ def run_parallel(sim, gen, pA, pB, pD, tJ, tF, tG, tH, base_dir, date, trials):
 def get_error(sim, gen, trials, base_dir, date):
     results = pd.DataFrame()
     for i in range(trials): # Average over simulation trials
-        file = base_dir + "output/" + str(date) + "/sim_" + str(sim) + "_gen_" + str(gen) + "_ID_" + str(i) + ".tsv"
+        file = base_dir + "src/python/main/" + str(date) + "/output/sim_" + str(sim) + "_gen_" + str(gen) + "_ID_" + str(i) + ".tsv"
         tmp = pd.read_csv(file, sep="\t")
         tmp = tmp.round({'time': 0})
         tmp = tmp[tmp['time'] == 500.0]
         tmp = tmp[tmp.species.str.match("gene_")]
-        results = results.append(tmp, ignore_index=True)
+        results = pd.concat([results, tmp], ignore_index=True)
     results = results.groupby("species").mean()
     
     if (gen == 0):
@@ -246,7 +246,7 @@ def main(u, o, o_prom, o_term, date, sim, base_dir, trials, iterations):
                     print(gen, pA, pB, pD, tJ, tF, tG, tH)
                     new_run = {'gen': gen, 'pA': pA, 'pB': pB, 'pD': pD, 'tJ': tJ, 'tF': tF, 'tG': tG, 'tH': tH,
                                'error': new_error, 'min_error': new_error}
-                    report_df = report_df.append(new_run, ignore_index=True)
+                    report_df = pd.concat([report_df, pd.DataFrame([new_run])], ignore_index=True)
                     min_gen = gen
                     min_error = report_df.at[min_gen, "min_error"]  # gen 0 has the min error so far
                     gen = 1
@@ -337,7 +337,7 @@ def main(u, o, o_prom, o_term, date, sim, base_dir, trials, iterations):
             # Save poor run
             new_run = {'gen': gen, 'pA': pA, 'pB': pB, 'pD': pD, 'tJ': tJ, 'tF': tF, 'tG': tG, 'tH': tH,
                        'error': new_error, 'min_error': min_error}
-            report_df = report_df.append(new_run, ignore_index=True)
+            report_df = pd.concat([report_df, pd.DataFrame([new_run])], ignore_index=True)
 
             # reset all promoter & terminator values to min_gen parameters
             pA = report_df.at[min_gen, "pA"]
@@ -358,11 +358,11 @@ def main(u, o, o_prom, o_term, date, sim, base_dir, trials, iterations):
             min_gen = gen  # update generation with the min error
             new_run = {'gen': gen, 'pA': pA, 'pB': pB, 'pD': pD, 'tJ': tJ, 'tF': tF, 'tG': tG, 'tH': tH,
                        'error': new_error, 'min_error': min_error}
-            report_df = report_df.append(new_run, ignore_index=True)
+            report_df = pd.concat([report_df, pd.DataFrame([new_run])], ignore_index=True)
             gen = gen + 1
             print(f"\n")
 
-    report_df.to_csv(base_dir + "output/" + str(date) + "/sim_" +str(sim) +"_report.csv")
+    report_df.to_csv(base_dir + "src/python/main/" + str(date) + "/output/sim_" +str(sim) +"_report.csv")
 
 
 if __name__ == '__main__':
@@ -376,6 +376,6 @@ if __name__ == '__main__':
     o_prom = float(sys.argv[6])
     o_term = float(sys.argv[7])
     trials = 5
-    iterations = 4000
+    iterations = 10   # change from 4000
         
     main(u, o, o_prom, o_term, date, sim, base_dir, trials, iterations)

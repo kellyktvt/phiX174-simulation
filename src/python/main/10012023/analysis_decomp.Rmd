@@ -22,7 +22,7 @@ Common Functions & Base directory
 ```{r, echo = FALSE, message = FALSE, warning=FALSE}
 # Functions & Variables I use a lot
 date <- "10012023"
-filedir <- paste("../../../../output/", date, "/", sep="")
+filedir <- paste("src/python/main/", date, "/output/", sep="")
 
 my_palette = c('#8C4C47', '#C27F7A', '#21819F', '#65AFCF', '#93D8F8', '#398048', '#73B47E', '#97D8A2', '#A56EA9', '#C994CE', '#EDB7F2')
 
@@ -57,15 +57,22 @@ best_gen <- function(filedir) {
 # plot_reports() plots the RMSE v generations for all the simulations in a given scenario
 plot_reports <- function(filedir,  title){
   x_scale <- c(0, 100, 200, 300, 400, 500)
+
+  # Check if the file exists
+  sim1_file <- paste0(filedir, "sim_1_report.csv")
+  if (!file.exists(sim1_file)) {
+    stop(paste("Error: File", sim1_file, "does not exist in current working directory."))
+  }
   
-  figure <- get_reports(filedir) %>% 
+  #figure <- get_reports(filedir) %>% 
+  figure <- read_csv(sim1_file) %>%
     # filter(!is.na(gen)) %>% 
     filter(gen > 0) %>% 
     filter(error < 10000) %>% 
     ggplot(aes(x = gen)) +
     geom_line(aes(y = error, color = "error"), color = "#CC79A7") + 
     geom_line(aes(y = min_error, color = "min error"), color = "black") +
-    facet_wrap(~sim) + 
+    #facet_wrap(~sim) + 
     #ggtitle(title) + 
     xlab("Generations") +
     ylab("RMSE") + 
